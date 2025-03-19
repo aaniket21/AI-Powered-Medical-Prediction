@@ -5,18 +5,9 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score, confusion_matrix, classification_report
 from sklearn.preprocessing import LabelEncoder
 import joblib
-
-# -----------------------
 # 1. Load the Dataset
-# -----------------------
 file_path = "datasets/heart_disease_uci.csv"
 data = pd.read_csv(file_path)
-
-# -----------------------
-# 2. Data Preprocessing
-# -----------------------
-
-# Handle missing values by filling with median (for numerical columns)
 data.fillna(data.median(numeric_only=True), inplace=True)
 
 # Encode categorical variables
@@ -37,17 +28,9 @@ y = data['target']
 
 # Splitting data into training and testing sets
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-
-# -----------------------
-# 3. Model Training
-# -----------------------
 print("\nTraining Heart Disease Model...")
 model = RandomForestClassifier(n_estimators=200, random_state=42)
-model.fit(X_train, y_train)
-
-# -----------------------
 # 4. Model Evaluation
-# -----------------------
 y_pred = model.predict(X_test)
 accuracy = accuracy_score(y_test, y_pred)
 
