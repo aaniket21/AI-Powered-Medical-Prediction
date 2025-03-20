@@ -29,50 +29,66 @@ def load_scaler(scaler_path):
 models = {
     "Diabetes": {
         "model": load_model("models/diabetes_model.pkl"),
-        "scaler": load_scaler("models/diabetes_scaler.pkl")
+        "scaler": load_scaler("models/diabetes_scaler.pkl"),
+        "expected_features": 8
     },
     "Heart Disease": {
         "model": load_model("models/heart_disease_model.pkl"),
-        "scaler": load_scaler("models/heart_disease_scaler.pkl")
+        "scaler": load_scaler("models/heart_disease_scaler.pkl"),
+        "expected_features": 14
     },
     "Lung Cancer": {
         "model": load_model("models/lung_cancer_model.pkl"),
-        "scaler": None  # No scaler for lung cancer
+        "scaler": None,
+        "expected_features": 15
     },
     "Liver Disease": {
         "model": load_model("models/liver_disease_model.pkl"),
-        "scaler": load_scaler("models/liver_disease_scaler.pkl")
+        "scaler": load_scaler("models/liver_disease_scaler.pkl"),
+        "expected_features": 10
     },
     "Breast Cancer": {
         "model": load_model("models/breast_cancer_model.pkl"),
-        "scaler": load_scaler("models/breast_cancer_scaler.pkl")
+        "scaler": load_scaler("models/breast_cancer_scaler.pkl"),
+        "expected_features": 5
     },
     "Kidney Disease": {
         "model": load_model("models/kidney_disease_model.pkl"),
-        "scaler": load_scaler("models/kidney_disease_scaler.pkl")
+        "scaler": load_scaler("models/kidney_disease_scaler.pkl"),
+        "expected_features": 28
     },
     "Parkinson's Disease": {
         "model": load_model("models/parkinsons_model.pkl"),
-        "scaler": load_scaler("models/parkinsons_scaler.pkl")
+        "scaler": load_scaler("models/parkinsons_scaler.pkl"),
+        "expected_features": 22
     }
 }
+
+# --------------------------
+# ✅ Function to Dynamically Add Missing Features
+# --------------------------
+def add_missing_features(user_input, expected_features):
+    
+    if len(user_input) < expected_features:
+        missing_count = expected_features - len(user_input)
+        user_input += [0] * missing_count  # Add zeros for missing features
+
+    return np.array(user_input).reshape(1, -1)
 
 # --------------------------
 # ✅ Preprocessing Function (Only uses User Input)
 # --------------------------
 def preprocess_input(user_input):
-    """
-    Converts the user input into a NumPy array.
-    """
+    """Converts the user input into a NumPy array."""
     input_array = np.array(list(user_input.values())).reshape(1, -1)
     return input_array
 
 # --------------------------
-# ✅ Prediction Function (Without Scaler Dependency)
+# ✅ Prediction Function (Handles Scaler and Dynamic Feature Count)
 # --------------------------
 def predict_disease(disease, user_input):
-    """Make predictions based on user input only, without scaler correction."""
-    
+    """Make predictions with dynamic feature adjustment."""
+
     model_data = models.get(disease)
     
     if not model_data or not model_data["model"]:
@@ -80,9 +96,14 @@ def predict_disease(disease, user_input):
     
     try:
         model = model_data["model"]
+        expected_features = model_data.get("expected_features", len(user_input))
+        
         input_array = preprocess_input(user_input)
 
-        # ⚠️ Skip scaler if dimensions don't match
+        # Dynamically add missing features
+        input_array = add_missing_features(list(input_array[0]), expected_features)
+
+        # Apply scaler if it exists
         scaler = model_data["scaler"]
         if scaler and input_array.shape[1] == scaler.n_features_in_:
             input_array = scaler.transform(input_array)
@@ -96,9 +117,9 @@ def predict_disease(disease, user_input):
             result = f"Positive ({probability:.2f}% confidence)" if prediction[0] == 1 else f"Negative ({100 - probability:.2f}% confidence)"
         else:
             result = "Positive" if prediction[0] == 1 else "Negative"
-        
+
         return result
-    
+
     except Exception as e:
         return f"⚠️ Prediction failed: {str(e)}"
 
